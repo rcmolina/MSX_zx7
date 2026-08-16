@@ -1,0 +1,214 @@
+MANUAL DE USUARIO: HERBYMON
+23.2 Trabajar con HERBYMON
+basic
+10 CLEAR200 , &H9FFF: SCREENO : CLS
+20 BLOAD" HERBY.MON"
+30 DEFUSR=49059!:KEY1, "M=USR(0)"+CHR$(13)
+40 PRINT"F1 - HERBYMON":NEW
+
+Asumamos que ha logrado iniciar el HERBYMON. Probablemente lo haya hecho con la ayuda de un cargador simple en BASIC o tal vez directamente mediante el comando BLOAD "HERBY.MON", R. En ambos casos, aparecerá la siguiente pantalla de inicio en el modo de 40 columnas:
+
+HERBYMON (V1.1)
+    SP   IY   IX   HL   DE   BC   A
+.*  9D17 DE92 F38B BF96 0007 0300 00
+.  
+
+Los valores hexadecimales pueden variar; hablaremos de ello más adelante. Seguramente comprende la expresión 'HERBYMON (V1.1)', pero ¿qué significan esas letras? Bien, hacen referencia a los ya conocidos registros internos del procesador Z80:
+*	SP: stack pointer (o puntero de pila)
+*	IY: registro de índice Y
+*	IX: registro de índice X
+*	HL: par de registros HL
+*	DE: par de registros DE
+*	BC: par de registros BC
+*	A: acumulador
+*	
+Los números que se encuentran debajo de estos siete ilustres registros cambiarán eventualmente bajo la influencia de sus propias rutinas y/o de algún comando especial de HERBYMON. Recuerde que puede utilizar estos valores durante la evaluación de rutinas en la fase de prueba.
+
+Resumen de Comandos
+Tiene 26 comandos a su disposición. Brevemente:
+Comando	Descripción
+A	Ensamblar
+C	Llamada a subrutina, con retorno a HERBYMON
+D	Desensamblar
+F	Llenar un área de memoria con un valor específico
+H	Buscar en un área de memoria la presencia de una secuencia de caracteres deseada
+J	Un salto desde HERBYMON hacia su propio programa
+L	Cargar un archivo de HERBYMON desde casete
+M	Volcado de memoria (memory dump) en bytes y ASCII
+P	Activar la impresora
+Q	Desactivar la impresora
+S	Guardar un fragmento de memoria como archivo de HERBYMON en casete
+T	Transferir (mover) un fragmento de memoria
+W	Escribir un fragmento de texto ASCII en una ubicación de memoria deseada
+X	Salir de HERBYMON
+!	Mostrar los registros internos
+#	Conversión de un valor decimal
+$	Conversión de un valor hexadecimal
+%	Conversión de un valor binario
+&	Operación lógica AND en dos valores
+*	Modificar los registros internos
++	Calcular la suma de dos valores
+-	Calcular la diferencia de dos valores
+/ o |	Operación lógica XOR en dos valores
+:	Colocar bytes con volcado de memoria
+;	Colocar bytes con desensamblado
+@	Operación lógica OR en dos valores
+Probablemente ya intuya la sintaxis y el efecto de la mayoría de los comandos. No obstante, a continuación recibirá una explicación más detallada.
+
+Explicación Detallada de los Comandos
+A - ENSAMBLAR (ASSEMBLEREN)
+Ensambla código máquina línea por línea. Se realiza de la siguiente manera:
+
+.A [dirección_inicio] [nemónico] [operando(s)]
+
+Debe haber un espacio entre cada parámetro. Tras pulsar la tecla RETURN, HERBYMON puede reaccionar de dos maneras:
+1º	La sintaxis es aceptada: Se convierte y se desensambla. Como consecuencia, puede continuar desde la siguiente ubicación (lógica) de memoria.
+2º	
+3º	¡Cometió un error! Aparecerá un signo de interrogación ?. (En este caso, ha inventado una instrucción inexistente o el error está en el operando).
+4º	
+Consejos para ensamblar correctamente:
+*	Un salto relativo se indica con @....
+*	Un desplazamiento de índice (index offset) se indica con &...
+*	Los bytes y palabras (words) normales se indican con $... y $...! respectivamente.
+*	
+Ejemplos:
+
+.A E000 DJNZ @E000
+.A E000 LD (IX+&7F),$FF
+.A E000 LD HL,$1234
+.A E000 RET
+
+ CONSEJO: El área entre $C000 y $F380 es una zona excelente que puede proteger desde BASIC con la orden CLEAR 200, &hBFFF.
+
+C - SUBRUTINA (SUBROUTINE)
+Salta a una subrutina de código máquina escrita por usted y, si todo va bien, regresa limpiamente a HERBYMON. Se utiliza así:
+
+.C [dirección_inicio]
+
+Ejemplo:
+
+.C 00C0
+Usa el código con precaución.
+ CONSEJO: Utilice este comando para comprender los efectos deseados o no deseados. Para una máxima comodidad, es posible modificar primero los registros internos.
+
+D - DESENSAMBLAR (DISASSEMBLEREN)
+Decodifica una serie de bytes en instrucciones Z80 legibles. Este comando es el opuesto al comando de ensamblado. Se usa así:
+
+.D [dirección_inicio]
+o bien
+.D [dirección_inicio] [dirección_final]
+
+Ejemplos:
+
+.D 1000
+.D 1000 2000
+
+ CONSEJO: Puede pausar el desensamblado presionando la barra espaciadora. Puede interrumpirlo prematuramente utilizando cualquiera de las teclas de cursor.
+
+F - LLENAR o 'VOL-POKEN' (FILL)
+Llena un fragmento de memoria con un valor de byte deseado:
+
+.F [dirección_inicio] [dirección_final] [byte]
+
+Ejemplo:
+
+.F D000 E000 00
+
+Compruebe ahora el contenido de esa misma zona con el comando M.
+ CONSEJO: Para saber si sus rutinas no estropean nada, puede llenar un fragmento de memoria y comprobar al finalizar si algo ha salido mal.
+
+H - BUSCAR (HUNT o ZOEKEN)
+Examina un fragmento de memoria buscando la presencia de un carácter o una secuencia de caracteres determinada. Se puede hacer de dos formas:
+
+.H [dirección_inicio] [dirección_final] [byte] ... [byte]
+.H [dirección_inicio] [dirección_final] [cadena_texto]
+
+Ejemplos:
+
+.H 1000 2000 FF FF
+.H 1000 8000 BASIC
+
+ CONSEJO: Vea el consejo del comando D. Utilice este comando para evitar búsquedas a ciegas. ¡Muy útil si ya no recuerda dónde han quedado sus textos!
+
+J - SALTAR (JUMP o SPRINGEN)
+Realiza un salto desde HERBYMON hacia su propio programa en lenguaje máquina. Antes de hacerlo, puede modificar los registros internos; estos se copiarán antes de dar el "salto al vacío". La sintaxis es:
+
+.J [dirección_inicio]
+
+Ejemplo:
+
+.J 0000
+
+ CONSEJO: Salte desde HERBYMON para asegurarse de que "aterriza bien". ¡Revise siempre los registros internos de antemano!
+
+L - CARGAR (LOADEN)
+Carga desde casete un archivo en formato HERBYMON(!). Existen dos posibilidades:
+
+.L [nombre_archivo]
+o bien
+.L [nombre_archivo] [dirección_carga]
+
+Ejemplos:
+
+.L TEST
+.L TEST D880
+
+ CONSEJO: Por razones de seguridad, el formato HERBYMON es diferente del formato estándar de MSX. Un archivo guardado desde HERBYMON solo puede volver a importarse desde aquí. Un archivo "externo" se debe leer con un cargador BASIC, es decir, mediante el comando BLOAD.
+
+M - VOLCADO DE MEMORIA (MEMORY-DUMP)
+Permite visualizar un fragmento de memoria tanto en bytes como en caracteres ASCII, de dos maneras diferentes:
+
+.M [dirección_inicio]
+o bien
+.M [dirección_inicio] [dirección_final]
+
+Ejemplos:
+
+.M 2000
+.M 2000 3000
+
+ CONSEJO: Vea el consejo del comando D. Utilice este comando, por ejemplo, para poder leer textos o simplemente para investigar una zona de la memoria.
+
+P - ACTIVAR IMPRESORA
+Tras ejecutar este comando, todo se mostrará tanto en la pantalla como en la impresora, siempre que se utilice una impresora compatible con MSX.
+
+.P
+
+ CONSEJO: Si la impresora no está conectada, puede liberarse utilizando la combinación CONTROL-STOP.
+
+Q - DESACTIVAR IMPRESORA
+Imprimir cuesta papel. Cuando haya terminado de imprimir el material deseado, desactive la función de impresión simultánea con este comando:
+
+.Q
+
+
+S - GUARDAR (SAVEN)
+Guarda un archivo en el formato especial de HERBYMON en casete:
+
+.S [nombre_archivo] [dirección_inicio] [dirección_final]
+
+Ejemplo:
+
+.S TEST 1000 2000
+
+ CONSEJO: Si se ha equivocado, presione CONTROL-STOP. Si desea guardar un archivo en el formato estándar de MSX, regrese a BASIC mediante el comando X y utilice la instrucción BSAVE.
+
+T - TRANSFERIR o MOVER (TRANSFER)
+Puede mover un fragmento de memoria a una nueva dirección:
+
+.T [dirección_inicio] [dirección_final] [dirección_destino]
+
+Ejemplo:
+
+.T A000 C000 D000
+
+ CONSEJO: Utilice este comando en combinación con la opción de "cargar en dirección" para enlazar su biblioteca de subrutinas.
+
+W - ESCRIBIR (WRITE)
+Un comando para poder colocar textos directamente con HERBYMON. Esto le ahorrará mucho tiempo, ya que de lo contrario tendría que lidiar con una tabla ASCII y el comando :. Funciona así:
+
+.W [dirección_inicio] [cadena_texto]
+
+Ejemplo:
+
+.W D800 maximaal 16
